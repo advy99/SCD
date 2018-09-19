@@ -1,0 +1,4 @@
+Compilar con:
+
+
+	`g++ -std=c++11 -pthread -O3 ejemplo09-{mod,bloques}.cpp -o ejemplo09-{mod,bloques}`
