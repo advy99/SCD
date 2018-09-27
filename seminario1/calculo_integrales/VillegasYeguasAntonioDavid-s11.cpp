@@ -9,6 +9,9 @@
 // Creado en Abril de 2017
 // -----------------------------------------------------------------------------
 
+
+// Antonio David Villegas Yeguas - 2do B - Grupo B2
+
 #include <iostream>
 #include <iomanip>
 #include <chrono>  // incluye now, time\_point, duration
@@ -103,3 +106,5 @@ int main()
        << setprecision(4)
        << "Porcentaje t.conc/t.sec. : " << porc << "%" << endl;
 }
+
+
