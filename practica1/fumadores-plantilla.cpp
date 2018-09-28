@@ -12,7 +12,9 @@ using namespace SEM ;
 const int NUM_FUMADORES = 3;
 
 Semaphore estanquero_puede_trabajar = 1;
-Semaphore fumadores[NUM_FUMADORES];
+
+//Problema inicializando el vector, de momento, lo tengo que hacer de esta forma.
+Semaphore producto_fumadores[NUM_FUMADORES] = {0, 0, 0};
 
 
 //**********************************************************************
@@ -33,7 +35,17 @@ template< int min, int max > int aleatorio()
 
 void funcion_hebra_estanquero(  )
 {
+  while ( true ){
+    sem_wait ( estanquero_puede_trabajar );
 
+    cout << endl << "El estanquero se pone a trabajar" << endl;
+
+    int producto_generado = aleatorio<0,NUM_FUMADORES-1>();
+
+    cout << endl << "El estanquero pone el producto: " << producto_generado << " y se va a descansar " << endl;
+
+    sem_signal( producto_fumadores[producto_generado] );
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -65,6 +77,11 @@ void  funcion_hebra_fumador( int num_fumador )
 {
    while( true )
    {
+     sem_wait ( producto_fumadores[num_fumador] );
+
+     fumar( num_fumador );
+
+     sem_signal( estanquero_puede_trabajar );
 
    }
 }
@@ -75,4 +92,22 @@ int main()
 {
    // declarar hebras y ponerlas en marcha
    // ......
+
+   thread fumadores[NUM_FUMADORES];
+   thread estanquero;
+
+  //Lanzamos hebras
+  for (int i = 0; i < NUM_FUMADORES; i++){
+    fumadores[i] = thread (funcion_hebra_fumador, i);
+  }
+
+  estanquero = thread ( funcion_hebra_estanquero);
+
+
+  //Esperamos a que acaben las hebras
+   for ( int i = 0; i < NUM_FUMADORES; i++){
+     fumadores[i].join();
+   }
+
+   estanquero.join();
 }
