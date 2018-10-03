@@ -16,6 +16,7 @@ const int num_items = 40 ,   // número de items
 unsigned  cont_prod[num_items] = {0}, // contadores de verificación: producidos
           cont_cons[num_items] = {0}; // contadores de verificación: consumidos
 
+
 Semaphore puede_escribir = tam_vec,
           puede_leer     = 0;
 
@@ -96,6 +97,7 @@ void  funcion_hebra_productora(  )
    {
       int dato = producir_dato() ;
       // completar ......
+
       sem_wait( puede_escribir );
       mtx.lock();
       indice = i % tam_vec;
@@ -114,6 +116,7 @@ void funcion_hebra_consumidora(  )
    {
       int dato ;
       // completar ......
+      
       sem_wait( puede_leer );
       mtx.lock();
       indice = i % tam_vec;

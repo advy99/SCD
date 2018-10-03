@@ -11,10 +11,9 @@ using namespace SEM ;
 
 const int NUM_FUMADORES = 3;
 
-Semaphore estanquero_puede_trabajar = 1;
+Semaphore puede_producir = 1;
 
-//Problema inicializando el vector, de momento, lo tengo que hacer de esta forma.
-Semaphore producto_fumadores[NUM_FUMADORES] = {0, 0, 0};
+std::vector<Semaphore> ingredientes;
 
 mutex mtx;
 
@@ -37,17 +36,18 @@ template< int min, int max > int aleatorio()
 
 void funcion_hebra_estanquero(  )
 {
-  while ( true ){
-    sem_wait ( estanquero_puede_trabajar );
+   while (true){
+      sem_wait(puede_producir);
 
-    mtx.lock();
-    cout << endl << "El estanquero se pone a trabajar" << endl;
-    int producto_generado = aleatorio<0,NUM_FUMADORES-1>();
-    cout << endl << "El estanquero pone el producto: " << producto_generado << " y se va a descansar " << endl;
-    mtx.unlock();
+      int producido = aleatorio<0, NUM_FUMADORES-1>();
 
-    sem_signal( producto_fumadores[producto_generado] );
-  }
+      mtx.lock();
+      cout << "El estanquero produce el item " << producido << endl << flush;
+      mtx.unlock();
+
+      sem_signal(ingredientes[producido]);
+
+   }
 }
 
 //-------------------------------------------------------------------------
@@ -61,12 +61,14 @@ void fumar( int num_fumador )
 
    // informa de que comienza a fumar
 
-    cout << endl <<  "Fumador " << num_fumador << "  :"
+    cout << "Fumador " << num_fumador << "  :"
           << " empieza a fumar (" << duracion_fumar.count() << " milisegundos)" << endl;
+
    // espera bloqueada un tiempo igual a ''duracion_fumar' milisegundos
    this_thread::sleep_for( duracion_fumar );
 
    // informa de que ha terminado de fumar
+
     cout << "Fumador " << num_fumador << "  : termina de fumar, comienza espera de ingrediente." << endl;
 
 }
@@ -77,14 +79,13 @@ void  funcion_hebra_fumador( int num_fumador )
 {
    while( true )
    {
-     sem_wait ( producto_fumadores[num_fumador] );
+      sem_wait(ingredientes[num_fumador]);
 
-     mtx.lock();
-     fumar( num_fumador );
-     mtx.unlock();
+      mtx.lock();
+      fumar(num_fumador);
+      mtx.unlock();
 
-     sem_signal( estanquero_puede_trabajar );
-
+      sem_signal(puede_producir);
    }
 }
 
@@ -95,21 +96,20 @@ int main()
    // declarar hebras y ponerlas en marcha
    // ......
 
-   thread fumadores[NUM_FUMADORES];
+   for (int i = 0; i < NUM_FUMADORES; i++)
+      ingredientes.push_back(0);
+
    thread estanquero;
 
-  //Lanzamos hebras
-  for (int i = 0; i < NUM_FUMADORES; i++){
-    fumadores[i] = thread (funcion_hebra_fumador, i);
-  }
+   thread fumadores[NUM_FUMADORES];
 
-  estanquero = thread ( funcion_hebra_estanquero);
+   for (int i = 0; i < NUM_FUMADORES; i++)
+      fumadores[i] = thread (funcion_hebra_fumador, i);
+   
+   estanquero = thread (funcion_hebra_estanquero);
 
-
-  //Esperamos a que acaben las hebras
-   for ( int i = 0; i < NUM_FUMADORES; i++){
-     fumadores[i].join();
-   }
+   for (int i = 0; i < NUM_FUMADORES; i++)
+      fumadores[i].join();
 
    estanquero.join();
 }

@@ -12,7 +12,7 @@ using namespace SEM ;
 // variables compartidas
 
 const int num_items = 40 ,   // número de items
-	       tam_vec   = 10 ;   // tamaño del buffer
+	        tam_vec   = 10 ;   // tamaño del buffer
 unsigned  cont_prod[num_items] = {0}, // contadores de verificación: producidos
           cont_cons[num_items] = {0}; // contadores de verificación: consumidos
 
