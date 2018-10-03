@@ -12,13 +12,14 @@ using namespace SEM ;
 // variables compartidas
 
 const int num_items = 40 ,   // número de items
-	       tam_vec   = 10 ;   // tamaño del buffer
+	        tam_vec   = 10 ;   // tamaño del buffer
 unsigned  cont_prod[num_items] = {0}, // contadores de verificación: producidos
           cont_cons[num_items] = {0}; // contadores de verificación: consumidos
 
-Semaphore puede_escribir = 1,
+Semaphore puede_escribir = tam_vec,
           puede_leer     = 0;
 
+mutex mtx;
 
 int buffer [tam_vec];
 int indice = 0;
@@ -46,7 +47,9 @@ int producir_dato()
    static int contador = 0 ;
    this_thread::sleep_for( chrono::milliseconds( aleatorio<20,100>() ));
 
+   mtx.lock();
    cout << "producido: " << contador << endl << flush ;
+   mtx.unlock();
 
    cont_prod[contador] ++ ;
    return contador++ ;
@@ -59,8 +62,9 @@ void consumir_dato( unsigned dato )
    cont_cons[dato] ++ ;
    this_thread::sleep_for( chrono::milliseconds( aleatorio<20,100>() ));
 
+   mtx.lock();
    cout << "                  consumido: " << dato << endl ;
-   
+   mtx.unlock();
 }
 
 
@@ -93,8 +97,10 @@ void  funcion_hebra_productora(  )
       int dato = producir_dato() ;
       // completar ......
       sem_wait( puede_escribir );
+      mtx.lock();
       indice = i % tam_vec;
       buffer[indice] = dato;
+      mtx.unlock();
 
       sem_signal( puede_leer );
    }
@@ -109,8 +115,10 @@ void funcion_hebra_consumidora(  )
       int dato ;
       // completar ......
       sem_wait( puede_leer );
+      mtx.lock();
       indice = i % tam_vec;
       dato = buffer[indice];
+      mtx.unlock();
 
       sem_signal( puede_escribir );
 

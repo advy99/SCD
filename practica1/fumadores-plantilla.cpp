@@ -16,6 +16,8 @@ Semaphore estanquero_puede_trabajar = 1;
 //Problema inicializando el vector, de momento, lo tengo que hacer de esta forma.
 Semaphore producto_fumadores[NUM_FUMADORES] = {0, 0, 0};
 
+mutex mtx;
+
 
 //**********************************************************************
 // plantilla de función para generar un entero aleatorio uniformemente
@@ -38,11 +40,11 @@ void funcion_hebra_estanquero(  )
   while ( true ){
     sem_wait ( estanquero_puede_trabajar );
 
+    mtx.lock();
     cout << endl << "El estanquero se pone a trabajar" << endl;
-
     int producto_generado = aleatorio<0,NUM_FUMADORES-1>();
-
     cout << endl << "El estanquero pone el producto: " << producto_generado << " y se va a descansar " << endl;
+    mtx.unlock();
 
     sem_signal( producto_fumadores[producto_generado] );
   }
@@ -59,14 +61,12 @@ void fumar( int num_fumador )
 
    // informa de que comienza a fumar
 
-    cout << "Fumador " << num_fumador << "  :"
+    cout << endl <<  "Fumador " << num_fumador << "  :"
           << " empieza a fumar (" << duracion_fumar.count() << " milisegundos)" << endl;
-
    // espera bloqueada un tiempo igual a ''duracion_fumar' milisegundos
    this_thread::sleep_for( duracion_fumar );
 
    // informa de que ha terminado de fumar
-
     cout << "Fumador " << num_fumador << "  : termina de fumar, comienza espera de ingrediente." << endl;
 
 }
@@ -79,7 +79,9 @@ void  funcion_hebra_fumador( int num_fumador )
    {
      sem_wait ( producto_fumadores[num_fumador] );
 
+     mtx.lock();
      fumar( num_fumador );
+     mtx.unlock();
 
      sem_signal( estanquero_puede_trabajar );
 

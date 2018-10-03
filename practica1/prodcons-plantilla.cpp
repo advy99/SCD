@@ -17,6 +17,7 @@ unsigned  cont_prod[num_items] = {0}, // contadores de verificación: producidos
           cont_cons[num_items] = {0}; // contadores de verificación: consumidos
 
 
+
 //**********************************************************************
 // plantilla de función para generar un entero aleatorio uniformemente
 // distribuido entre dos valores enteros, ambos incluidos
