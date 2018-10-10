@@ -64,16 +64,18 @@ void fumar( int num_fumador )
    chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
 
    // informa de que comienza a fumar
-
+	 mtx.lock();
     cout << "Fumador " << num_fumador << "  :"
           << " empieza a fumar (" << duracion_fumar.count() << " milisegundos)" << endl;
+	 mtx.unlock();
 
    // espera bloqueada un tiempo igual a ''duracion_fumar' milisegundos
    this_thread::sleep_for( duracion_fumar );
 
    // informa de que ha terminado de fumar
-
+	 mtx.lock();
     cout << "Fumador " << num_fumador << "  : termina de fumar, comienza espera de ingrediente." << endl;
+	 mtx.unlock();
 
 }
 
@@ -86,14 +88,17 @@ void  funcion_hebra_fumador( int num_fumador )
 		//Espera a que este su ingrediente
       sem_wait(ingredientes[num_fumador]);
 
+		mtx.lock();
+		cout << "El fumador " << num_fumador << " entra a por el ingrediente y lo coge (el estanquero puede trabajar) " << endl;
+		mtx.unlock();
 		//Cuando esta su ingrediente, avisa de que lo coge y el estanquero
 		//puede producir otro
+
+		//Con esto nos aseguramos, que produce un ingrediente cuando ya lo ha retirado un fumador
 		sem_signal(puede_producir);
 
 		//El fumador se va a fumar
-      mtx.lock();
       fumar(num_fumador);
-      mtx.unlock();
 
    }
 }
