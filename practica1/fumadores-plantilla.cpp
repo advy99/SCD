@@ -13,7 +13,7 @@ const int NUM_FUMADORES = 3;
 
 Semaphore puede_producir = 1;
 
-std::vector<Semaphore> ingredientes;
+std::vector<Semaphore> ingredientes ;
 
 mutex mtx;
 
@@ -37,14 +37,18 @@ template< int min, int max > int aleatorio()
 void funcion_hebra_estanquero(  )
 {
    while (true){
-      sem_wait(puede_producir);
 
+		//El estanquero espera a poder producir
+      sem_wait(puede_producir); 
+
+		//Cuando puede, produce un elemento
       int producido = aleatorio<0, NUM_FUMADORES-1>();
 
       mtx.lock();
-      cout << "El estanquero produce el item " << producido << endl << flush;
+      cout << endl << "El estanquero produce el item " << producido << endl << flush;
       mtx.unlock();
 
+		//Avisa a los fumadores de que ya hay un ingrediente en la mesa
       sem_signal(ingredientes[producido]);
 
    }
@@ -79,13 +83,18 @@ void  funcion_hebra_fumador( int num_fumador )
 {
    while( true )
    {
+		//Espera a que este su ingrediente
       sem_wait(ingredientes[num_fumador]);
 
+		//Cuando esta su ingrediente, avisa de que lo coge y el estanquero
+		//puede producir otro
+		sem_signal(puede_producir);
+
+		//El fumador se va a fumar
       mtx.lock();
       fumar(num_fumador);
       mtx.unlock();
 
-      sem_signal(puede_producir);
    }
 }
 
@@ -97,7 +106,7 @@ int main()
    // ......
 
    for (int i = 0; i < NUM_FUMADORES; i++)
-      ingredientes.push_back(0);
+		ingredientes.push_back(0);
 
    thread estanquero;
 
