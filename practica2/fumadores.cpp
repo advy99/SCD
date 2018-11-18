@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <thread>
-//#include <mutex>
+#include <mutex>
 #include <random> // dispositivos, generadores y distribuciones aleatorias
 #include <chrono> // duraciones (duration), unidades de tiempo
 
@@ -60,9 +60,10 @@ Estanco::Estanco(){
 
 void Estanco::ponerIngrediente(int ingrediente){
 
-   if (ingrediente_en_mostrador != NUM_FUMADORES + 1){
+   while (ingrediente_en_mostrador != NUM_FUMADORES + 1){
       estanquero.wait();
    }
+
    mtx.lock();
    cout << "El estanquero pone el ingrediente " << ingrediente << endl << flush;
    mtx.unlock();
@@ -75,7 +76,7 @@ void Estanco::ponerIngrediente(int ingrediente){
 void Estanco::esperarRecogidaIngrediente(){
 
 
-   if (ingrediente_en_mostrador != NUM_FUMADORES + 1){
+   while (ingrediente_en_mostrador != NUM_FUMADORES + 1){
       estanquero.wait();
    }
 
@@ -85,7 +86,7 @@ void Estanco::esperarRecogidaIngrediente(){
 
 int Estanco::obtenerIngrediente(int n_fumador){
    int ingrediente;
-   while (ingrediente_en_mostrador != n_fumador){
+   if (ingrediente_en_mostrador != n_fumador){
       fumadores[n_fumador].wait();
    }
 
@@ -122,7 +123,7 @@ void fumar( int num_fumador )
 {
 
    // calcular milisegundos aleatorios de duración de la acción de fumar)
-   chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
+   chrono::milliseconds duracion_fumar( aleatorio<100,200>() );
 
    // informa de que comienza a fumar
 	 mtx.lock();
@@ -147,10 +148,8 @@ void  funcion_hebra_fumador( MRef<Estanco> estanco, int num_fumador )
    while( true )
    {
 
-      while (true){
-         estanco->obtenerIngrediente(num_fumador);
-         fumar(num_fumador);
-      }
+      estanco->obtenerIngrediente(num_fumador);
+      fumar(num_fumador);
 
    }
 }
