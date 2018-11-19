@@ -95,6 +95,8 @@ int Estanco::obtenerIngrediente(int n_fumador){
 
    ingrediente_en_mostrador = NUM_FUMADORES + 1;
 
+   cout << "El fumador " << n_fumador << " coge el ingrediente " << ingrediente << endl << flush;
+
    estanquero.signal();
 
    return ingrediente;
@@ -123,7 +125,7 @@ void fumar( int num_fumador )
 {
 
    // calcular milisegundos aleatorios de duración de la acción de fumar)
-   chrono::milliseconds duracion_fumar( aleatorio<100,200>() );
+   chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
 
    // informa de que comienza a fumar
 	 mtx.lock();
