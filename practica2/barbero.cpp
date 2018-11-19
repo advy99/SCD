@@ -48,26 +48,28 @@ void EsperarFueraBarberia(int num_cliente){
 }
 
 
-void EsperarFueraBarberia(int num_cliente){
+void cortarPeloACliente(){
    chrono::milliseconds cortar_pelo( aleatorio<20,200>() );
 
 
    mtx.lock();
-   cout << "El barbero comienza a cortar el pelo al cliente  " << num_cliente << endl;
+   cout << "El barbero comienza a cortar el pelo al cliente  " << endl;
    mtx.unlock();
 
    this_thread::sleep_for( cortar_pelo );
 
    mtx.lock();
-   cout << "El barbero acaba de cortar el pelo al cliente " << num_cliente << endl;
+   cout << "El barbero acaba de cortar el pelo al cliente " << endl;
    mtx.unlock();
 }
 
 
 class Barberia : public HoareMonitor{
 private:
+
    CondVar barbero;
-   CondVar clientes[NUM_CLIENTES];
+   CondVar silla;
+   CondVar cola_espera;
 
 public:
    Barberia();
@@ -75,6 +77,47 @@ public:
    void siguienteCliente();
    void finCliente();
 };
+
+Barberia::Barberia(){
+   barbero = newCondVar();
+   silla = newCondVar();
+   cola_espera = newCondVar();
+}
+
+void Barberia::cortarPelo(int n_cliente){
+   cout << "Entra cliente " << n_cliente << endl;
+   if (cola_espera.empty()){
+      if (barbero.empty()){
+         cout << "Cliente " << n_cliente << " espera a que el barbero acabe" << endl;
+         cola_espera.wait();
+      }else{
+         cout << "Cliente " << n_cliente << " despierta al barbero" << endl;
+         barbero.signal();
+
+      }
+   }else{
+      cout << "El cliente " << n_cliente << " se pone a la cola" << endl;
+      cola_espera.wait();
+   }
+   cout << "Cliente " << n_cliente << " se pone en la silla " << endl;
+   silla.wait();
+
+}
+
+void Barberia::siguienteCliente(){
+   if (cola_espera.empty()){
+      cout << "No hay clientes, el barbero se va a dormir" << endl;
+      barbero.wait();
+   }else{
+      cout << "Avisa al siguiente cliente" << endl;
+      cola_espera.signal();
+   }
+}
+
+void Barberia::finCliente(){
+   cout << "Barbero acaba con el cliente de la silla "<< endl;
+   silla.signal();
+}
 
 
 //----------------------------------------------------------------------
@@ -117,15 +160,18 @@ int main()
 
    thread barbero;
 
+   barbero = thread (funcion_hebra_barbero, barberia);
+
+
    thread clientes[NUM_CLIENTES];
 
    for (int i = 0; i < NUM_CLIENTES; i++)
       clientes[i] = thread (funcion_hebra_cliente, barberia, i);
 
-   barbero = thread (funcion_hebra_barbero, barberia);
+   barbero.join();
+
 
    for (int i = 0; i < NUM_CLIENTES; i++)
       clientes[i].join();
 
-   barbero.join();
 }
